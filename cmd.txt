@@ -1,0 +1,5 @@
+cd /d/FODS
+gcc -Wall -Wextra Assignment-06.c -o Assignment-06.exe
+
+./Assignment-06.exe
+
