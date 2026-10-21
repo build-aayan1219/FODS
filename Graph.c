@@ -171,7 +171,7 @@ void createEdge()
             firstIndex = getVertexIndex(firstVertex);
             if (firstIndex != -1)
                 valid = 1;
-        }
+        }   
 
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
@@ -203,10 +203,10 @@ void createEdge()
     }
 
     if (firstIndex == secondIndex)
-        printf("Self-loop is not allowed.\n");
+        printf("Cannnot Connect Link to itself.\n");
     else if (vertices_matrix[firstIndex][secondIndex] == 1)
         printf("Edge already exists.\n");
-    else
+    else                                                                        //here I created a new link...!!
     {
         vertices_matrix[firstIndex][secondIndex] = 1;
         vertices_matrix[secondIndex][firstIndex] = 1;
@@ -286,7 +286,7 @@ void updateEdge()
     }
 
     if (firstIndex == newIndex)
-        printf("Self-loop is not allowed.\n");
+        printf("Cannot Update a connection with itself..\n");
     else if (vertices_matrix[firstIndex][newIndex] == 1)
         printf("The new edge already exists.\n");
     else
@@ -345,7 +345,7 @@ void deleteEdge()
     }
 
     if (firstIndex == secondIndex)
-        printf("Self-loop is not allowed.\n");
+        printf("Cannoct connect a link with itself.\n");
     else if (vertices_matrix[firstIndex][secondIndex] == 0)
         printf("Edge not found\n");
     else
