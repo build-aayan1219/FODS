@@ -1,10 +1,8 @@
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
-#define MAX 5
-
-char vertex[MAX] = {'A', 'B', 'C', 'D', 'E'};
+#define NO_OF_ELEMENTS 5
 
 struct Node
 {
@@ -12,207 +10,116 @@ struct Node
     struct Node *next;
 };
 
-struct Node *adj[MAX] = {NULL, NULL, NULL, NULL, NULL};
-int visited[MAX];
+char vertex_name[NO_OF_ELEMENTS] = {'A', 'B', 'C', 'D', 'E'};
 
-struct QueueNode
-{
-    int vertex;
-    struct QueueNode *next;
-};
+struct Node *adjacency[NO_OF_ELEMENTS];
 
-struct QueueNode *front = NULL;
-struct QueueNode *rear = NULL;
+int stack[NO_OF_ELEMENTS];
+int top = -1;
 
-void clearInput()
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
+int queue[NO_OF_ELEMENTS];
+int front = -1;
+int rear = -1;
 
-int readInteger(int *n)
-{
-    int c;
+int visited[NO_OF_ELEMENTS];
 
-    if (scanf("%d", n) != 1)
-    {
-        clearInput();
-        return 0;
-    }
-
-    c = getchar();
-    if (c == '\n' || c == EOF)
-        return 1;
-
-    while (c != '\n' && c != EOF)
-        c = getchar();
-
-    return 0;
-}
-
-int vertexIndex(char ch)
+int getVertexIndex(char vertex)
 {
     int i;
-    ch = (char)toupper((unsigned char)ch);
-
-    for (i = 0; i < MAX; i++)
+    for (i = 0; i < NO_OF_ELEMENTS; i++)
     {
-        if (vertex[i] == ch)
+        if (vertex_name[i] == vertex)
             return i;
     }
-
     return -1;
 }
 
-void addEdge(int a, int b)
+void push(int vertex)
 {
-    struct Node *newNode;
-
-    newNode = (struct Node *)malloc(sizeof(struct Node));
-    if (newNode == NULL)
+    if (top < NO_OF_ELEMENTS - 1)
     {
-        printf("Memory allocation failed\n");
-        return;
-    }
-    newNode->vertex = b;
-    newNode->next = adj[a];
-    adj[a] = newNode;
-
-    newNode = (struct Node *)malloc(sizeof(struct Node));
-    if (newNode == NULL)
-    {
-        struct Node *temp = adj[a];
-        adj[a] = temp->next;
-        free(temp);
-        printf("Memory allocation failed\n");
-        return;
-    }
-    newNode->vertex = a;
-    newNode->next = adj[b];
-    adj[b] = newNode;
-}
-
-int edgeExists(int a, int b)
-{
-    struct Node *temp = adj[a];
-
-    while (temp != NULL)
-    {
-        if (temp->vertex == b)
-            return 1;
-        temp = temp->next;
-    }
-    return 0;
-}
-
-void deleteOneSide(int a, int b)
-{
-    struct Node *temp = adj[a];
-    struct Node *previous = NULL;
-
-    while (temp != NULL)
-    {
-        if (temp->vertex == b)
-        {
-            if (previous == NULL)
-                adj[a] = temp->next;
-            else
-                previous->next = temp->next;
-
-            free(temp);
-            return;
-        }
-        previous = temp;
-        temp = temp->next;
+        top++;
+        stack[top] = vertex;
     }
 }
 
-void deleteEdge(int a, int b)
+int pop()
 {
-    deleteOneSide(a, b);
-    deleteOneSide(b, a);
+    int vertex;
+
+    if (top == -1)
+        return -1;
+
+    vertex = stack[top];
+    top--;
+
+    return vertex;
 }
 
-void DFS(int v)
+void enqueue(int vertex)
 {
-    struct Node *temp;
-
-    visited[v] = 1;
-    printf("%c ", vertex[v]);
-
-    temp = adj[v];
-    while (temp != NULL)
+    if (rear < NO_OF_ELEMENTS - 1)
     {
-        if (visited[temp->vertex] == 0)
-            DFS(temp->vertex);
-        temp = temp->next;
-    }
-}
+        if (front == -1)
+            front = 0;
 
-void enqueue(int v)
-{
-    struct QueueNode *newNode;
-
-    newNode = (struct QueueNode *)malloc(sizeof(struct QueueNode));
-    if (newNode == NULL)
-    {
-        printf("Memory allocation failed\n");
-        return;
-    }
-
-    newNode->vertex = v;
-    newNode->next = NULL;
-
-    if (rear == NULL)
-    {
-        front = newNode;
-        rear = newNode;
-    }
-    else
-    {
-        rear->next = newNode;
-        rear = newNode;
+        rear++;
+        queue[rear] = vertex;
     }
 }
 
 int dequeue()
 {
-    struct QueueNode *temp;
-    int v;
+    int vertex;
 
-    if (front == NULL)
+    if (front == -1 || front > rear)
         return -1;
 
-    temp = front;
-    v = temp->vertex;
-    front = front->next;
+    vertex = queue[front];
+    front++;
 
-    if (front == NULL)
-        rear = NULL;
-
-    free(temp);
-    return v;
+    return vertex;
 }
 
-void BFS(int start)
+void DFS(int startIndex)
 {
+    int row;
     struct Node *temp;
-    int v, i;
 
-    for (i = 0; i < MAX; i++)
-        visited[i] = 0;
+    push(startIndex);
+    visited[startIndex] = 1;
 
-    front = NULL;
-    rear = NULL;
-    enqueue(start);
-    visited[start] = 1;
-
-    while (front != NULL)
+    while (top != -1)
     {
-        v = dequeue();
-        printf("%c ", vertex[v]);
+        row = pop();
+        printf("%c ", vertex_name[row]);
+        temp = adjacency[row];
 
-        temp = adj[v];
+        while (temp != NULL)
+        {
+            if (visited[temp->vertex] == 0)
+            {
+                push(temp->vertex);
+                visited[temp->vertex] = 1;
+            }
+            temp = temp->next;
+        }
+    }
+}
+
+void BFS(int startIndex)
+{
+    int row;
+    struct Node *temp;
+
+    enqueue(startIndex);
+    visited[startIndex] = 1;
+    while (front != -1 && front <= rear)
+    {
+        row = dequeue();
+        printf("%c ", vertex_name[row]);
+        temp = adjacency[row];
+
         while (temp != NULL)
         {
             if (visited[temp->vertex] == 0)
@@ -225,40 +132,303 @@ void BFS(int start)
     }
 }
 
-void displayGraph()
+void createEdge()
+{
+    char firstVertex, secondVertex;
+    int firstIndex, secondIndex;
+    struct Node *temp, *newNode;
+
+    printf("Enter first vertex (A-E): ");
+    scanf(" %c", &firstVertex);
+
+    printf("Enter second vertex (A-E): ");
+    scanf(" %c", &secondVertex);
+
+    firstIndex = getVertexIndex(firstVertex);
+    secondIndex = getVertexIndex(secondVertex);
+
+    if (firstIndex == -1 || secondIndex == -1)
+    {
+        printf("Invalid vertex!\n");
+        return;
+    }
+
+    if (firstIndex == secondIndex)
+    {
+        printf("Cannot connect a vertex to itself.\n");
+        return;
+    }
+    temp = adjacency[firstIndex];
+
+    while (temp != NULL)
+    {
+        if (temp->vertex == secondIndex)
+        {
+            printf("Edge already exists.\n");
+            return;
+        }
+        temp = temp->next;
+    }
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = secondIndex;
+    newNode->next = adjacency[firstIndex];
+    adjacency[firstIndex] = newNode;
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = firstIndex;
+    newNode->next = adjacency[secondIndex];
+    adjacency[secondIndex] = newNode;
+
+    printf("Edge created successfully.\n");
+}
+
+void updateEdge()
+{
+    char firstVertex, oldVertex, newVertex;
+    int firstIndex, oldIndex, newIndex;
+    struct Node *temp, *prev, *newNode;
+
+    printf("Enter first vertex of existing edge (A-E): ");
+    scanf(" %c", &firstVertex);
+
+    printf("Enter second vertex of existing edge (A-E): ");
+    scanf(" %c", &oldVertex);
+
+    firstIndex = getVertexIndex(firstVertex);
+    oldIndex = getVertexIndex(oldVertex);
+
+    if (firstIndex == -1 || oldIndex == -1)
+    {
+        printf("Invalid vertex!\n");
+        return;
+    }
+
+    if (firstIndex == oldIndex)
+    {
+        printf("Existing edge not found.\n");
+        return;
+    }
+
+    temp = adjacency[firstIndex];   
+
+    while (temp != NULL && temp->vertex != oldIndex)
+        temp = temp->next;
+
+    if (temp == NULL)
+    {
+        printf("Existing edge not found.\n");
+        return;
+    }
+
+    printf("Enter new second vertex (A-E): ");
+    scanf(" %c", &newVertex);
+
+    newIndex = getVertexIndex(newVertex);
+
+    if (newIndex == -1)
+    {
+        printf("Invalid vertex!\n");
+        return;
+    }
+
+    if (firstIndex == newIndex)
+    {
+        printf("Cannot connect a vertex to itself.\n");
+        return;
+    }
+
+    temp = adjacency[firstIndex];
+
+    while (temp != NULL)
+    {
+        if (temp->vertex == newIndex)
+        {
+            printf("The new edge already exists.\n");
+            return;
+        }
+        temp = temp->next;
+    }
+
+    prev = NULL;
+    temp = adjacency[firstIndex];
+
+    while (temp->vertex != oldIndex)
+    {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (prev == NULL)
+        adjacency[firstIndex] = temp->next;
+    else
+        prev->next = temp->next;
+
+    free(temp);
+
+    prev = NULL;
+    temp = adjacency[oldIndex];
+
+    while (temp->vertex != firstIndex)
+    {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (prev == NULL)
+        adjacency[oldIndex] = temp->next;
+    else
+        prev->next = temp->next;
+
+    free(temp);
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = newIndex;
+    newNode->next = adjacency[firstIndex];
+    adjacency[firstIndex] = newNode;
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = firstIndex;
+    newNode->next = adjacency[newIndex];
+    adjacency[newIndex] = newNode;
+
+    printf("Edge updated successfully.\n");
+}
+
+void deleteEdge()
+{
+    char firstVertex, secondVertex;
+    int firstIndex, secondIndex;
+    struct Node *temp, *prev;
+
+    printf("Enter first vertex (A-E): ");
+    scanf(" %c", &firstVertex);
+
+    printf("Enter second vertex (A-E): ");
+    scanf(" %c", &secondVertex);
+
+    firstIndex = getVertexIndex(firstVertex);
+    secondIndex = getVertexIndex(secondVertex);
+
+    if (firstIndex == -1 || secondIndex == -1)
+    {
+        printf("Invalid vertex!\n");
+        return;
+    }
+
+    if (firstIndex == secondIndex)
+    {
+        printf("Cannot connect a vertex to itself.\n");
+        return;
+    }
+
+    temp = adjacency[firstIndex];
+
+    while (temp != NULL && temp->vertex != secondIndex)
+        temp = temp->next;
+
+    if (temp == NULL)
+    {
+        printf("Edge not found.\n");
+        return;
+    }
+
+    prev = NULL;
+    temp = adjacency[firstIndex];
+
+    while (temp->vertex != secondIndex)
+    {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (prev == NULL)
+        adjacency[firstIndex] = temp->next;
+    else
+        prev->next = temp->next;
+
+    free(temp);
+
+    prev = NULL;
+    temp = adjacency[secondIndex];
+
+    while (temp->vertex != firstIndex)
+    {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (prev == NULL)
+        adjacency[secondIndex] = temp->next;
+    else
+        prev->next = temp->next;
+
+    free(temp);
+
+    printf("Edge deleted successfully.\n");
+}
+
+void displayVertices()
 {
     int i;
-    struct Node *temp;
 
-    printf("\nAdjacency List:\n");
-    for (i = 0; i < MAX; i++)
-    {
-        printf("%c -> ", vertex[i]);
-        temp = adj[i];
-        while (temp != NULL)
-        {
-            printf("%c -> ", vertex[temp->vertex]);
-            temp = temp->next;
-        }
-        printf("NULL\n");
-    }
+    printf("Vertices: ");
+
+    for (i = 0; i < NO_OF_ELEMENTS; i++)
+        printf("%c ", vertex_name[i]);
+
+    printf("\n");
 }
 
 int main()
 {
-    int choice, a, b, i, attempts, valid, start;
-    char ch1, ch2;
-    struct Node *temp;
+    char vertex;
+    int choice, startIndex, i;
+    struct Node *newNode, *temp;
 
-    /* Initial graph edges */
-    addEdge(0, 1);
-    addEdge(0, 2);
-    addEdge(1, 3);
-    addEdge(2, 3);
-    addEdge(2, 4);
-    addEdge(3, 4);
+    for (i = 0; i < NO_OF_ELEMENTS; i++)
+        adjacency[i] = NULL;
 
-    do
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = 1;
+    newNode->next = malloc(sizeof(struct Node));
+    newNode->next->vertex = 2;
+    newNode->next->next = NULL;
+    adjacency[0] = newNode;
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = 0;
+    newNode->next = malloc(sizeof(struct Node));
+    newNode->next->vertex = 3;
+    newNode->next->next = NULL;
+    adjacency[1] = newNode;
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = 0;
+    newNode->next = malloc(sizeof(struct Node));
+    newNode->next->vertex = 3;
+    newNode->next->next = malloc(sizeof(struct Node));
+    newNode->next->next->vertex = 4;
+    newNode->next->next->next = NULL;
+    adjacency[2] = newNode;
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = 1;
+    newNode->next = malloc(sizeof(struct Node));
+    newNode->next->vertex = 2;
+    newNode->next->next = malloc(sizeof(struct Node));
+    newNode->next->next->vertex = 4;
+    newNode->next->next->next = NULL;
+    adjacency[3] = newNode;
+
+    newNode = malloc(sizeof(struct Node));
+    newNode->vertex = 2;
+    newNode->next = malloc(sizeof(struct Node));
+    newNode->next->vertex = 3;
+    newNode->next->next = NULL;
+    adjacency[4] = newNode;
+
+    while (1)
     {
         printf("\n1. DFS\n");
         printf("2. BFS\n");
@@ -269,201 +439,73 @@ int main()
         printf("7. Display Adjacency List\n");
         printf("8. Exit\n");
 
-        valid = 0;
-        for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
-        {
-            printf("Enter your choice: ");
-            if (readInteger(&choice) == 1 && choice >= 1 && choice <= 8)
-                valid = 1;
-            else
-                printf("Invalid input! Attempt %d of 3\n", attempts);
-        }
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
 
-        if (valid == 0)
+        if (choice == 1 || choice == 2)
         {
-            printf("3 attempts completed. Program ended.\n");
-            choice = 8;
-        }
-        else if (choice == 1 || choice == 2)
-        {
-            valid = 0;
-            for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
+            printf("Enter starting vertex (A-E): ");
+            scanf(" %c", &vertex);
+
+            startIndex = getVertexIndex(vertex);
+
+            if (startIndex == -1)
             {
-                printf("Enter starting vertex (A-E): ");
-                if (scanf(" %c", &ch1) == 1)
-                {
-                    clearInput();
-                    start = vertexIndex(ch1);
-                    if (start != -1)
-                        valid = 1;
-                }
-                else
-                    clearInput();
-
-                if (valid == 0)
-                    printf("Invalid vertex! Attempt %d of 3\n", attempts);
+                printf("Invalid vertex!\n");
+                continue;
             }
 
-            if (valid == 1)
-            {
-                for (i = 0; i < MAX; i++)
-                    visited[i] = 0;
+            for (i = 0; i < NO_OF_ELEMENTS; i++)
+                visited[i] = 0;
 
-                if (choice == 1)
-                {
-                    printf("DFS: ");
-                    DFS(start);
-                }
-                else
-                {
-                    printf("BFS: ");
-                    BFS(start);
-                }
-                printf("\n");
-            }
-        }
-        else if (choice == 3 || choice == 5)
-        {
-            valid = 0;
-            for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
-            {
-                printf("Enter first vertex (A-E): ");
-                if (scanf(" %c", &ch1) != 1)
-                {
-                    clearInput();
-                    printf("Invalid vertex! Attempt %d of 3\n", attempts);
-                    continue;
-                }
-                clearInput();
-                a = vertexIndex(ch1);
+            top = -1;
+            front = -1;
+            rear = -1;
 
-                printf("Enter second vertex (A-E): ");
-                if (scanf(" %c", &ch2) != 1)
-                {
-                    clearInput();
-                    printf("Invalid vertex! Attempt %d of 3\n", attempts);
-                    continue;
-                }
-                clearInput();
-                b = vertexIndex(ch2);
-
-                if (a != -1 && b != -1 && a != b)
-                    valid = 1;
-                else
-                    printf("Invalid vertices! Attempt %d of 3\n", attempts);
-            }
-
-            if (valid == 1)
+            if (choice == 1)
             {
-                if (choice == 3)
-                {
-                    if (edgeExists(a, b))
-                        printf("Edge already exists\n");
-                    else
-                    {
-                        addEdge(a, b);
-                        if (edgeExists(a, b))
-                            printf("Edge created successfully\n");
-                    }
-                }
-                else
-                {
-                    if (edgeExists(a, b))
-                    {
-                        deleteEdge(a, b);
-                        printf("Edge deleted successfully\n");
-                    }
-                    else
-                        printf("Edge not found\n");
-                }
-            }
-        }
-        else if (choice == 4)
-        {
-            printf("Enter old edge's first vertex (A-E): ");
-            if (scanf(" %c", &ch1) == 1)
-            {
-                clearInput();
-                a = vertexIndex(ch1);
-                printf("Enter old edge's second vertex (A-E): ");
-                if (scanf(" %c", &ch2) == 1)
-                {
-                    clearInput();
-                    b = vertexIndex(ch2);
-                    if (a != -1 && b != -1 && a != b && edgeExists(a, b))
-                    {
-                        printf("Enter new edge's first vertex (A-E): ");
-                        if (scanf(" %c", &ch1) == 1)
-                        {
-                            clearInput();
-                            i = vertexIndex(ch1);
-                            printf("Enter new edge's second vertex (A-E): ");
-                            if (scanf(" %c", &ch2) == 1)
-                            {
-                                clearInput();
-                                start = vertexIndex(ch2);
-                                if (i != -1 && start != -1 && i != start && !edgeExists(i, start))
-                                {
-                                    deleteEdge(a, b);
-                                    addEdge(i, start);
-                                    printf("Edge updated successfully\n");
-                                }
-                                else
-                                    printf("Invalid new edge or edge already exists\n");
-                            }
-                            else
-                            {
-                                clearInput();
-                                printf("Invalid input\n");
-                            }
-                        }
-                        else
-                        {
-                            clearInput();
-                            printf("Invalid input\n");
-                        }
-                    }
-                    else
-                        printf("Old edge not found or invalid\n");
-                }
-                else
-                {
-                    clearInput();
-                    printf("Invalid input\n");
-                }
+                printf("DFS Traversal: ");
+                DFS(startIndex);
             }
             else
             {
-                clearInput();
-                printf("Invalid input\n");
+                printf("BFS Traversal: ");
+                BFS(startIndex);
             }
-        }
-        else if (choice == 6)
-        {
-            printf("Vertices: ");
-            for (i = 0; i < MAX; i++)
-                printf("%c ", vertex[i]);
+
             printf("\n");
         }
+        else if (choice == 3)
+            createEdge();
+        else if (choice == 4)
+            updateEdge();
+        else if (choice == 5)
+            deleteEdge();
+        else if (choice == 6)
+            displayVertices();
         else if (choice == 7)
-            displayGraph();
-
-    } while (choice != 8);
-
-    for (i = 0; i < MAX; i++)
-    {
-        temp = adj[i];
-        while (temp != NULL)
         {
-            struct Node *next = temp->next;
-            free(temp);
-            temp = next;
+            for (i = 0; i < NO_OF_ELEMENTS; i++)
+            {
+                printf("%c -> ", vertex_name[i]);
+
+                temp = adjacency[i];
+
+                while (temp != NULL)
+                {
+                    printf("%c -> ", vertex_name[temp->vertex]);
+                    temp = temp->next;
+                }
+
+                printf("NULL\n");
+            }
         }
+        else if (choice == 8)
+        {
+            printf("Program ended.\n");
+            return 0;
+        }
+        else
+            printf("Invalid choice!\n");
     }
-
-    while (front != NULL)
-        dequeue();
-
-    printf("Program ended.\n");
-    return 0;
 }
