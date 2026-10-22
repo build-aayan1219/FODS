@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -46,10 +45,8 @@ void push(int vertex)
 int pop()
 {
     int vertex;
-
     if (top == -1)
         return -1;
-
     vertex = stack[top];
     top--;
 
@@ -62,7 +59,6 @@ void enqueue(int vertex)
     {
         if (front == -1)
             front = 0;
-
         rear++;
         queue[rear] = vertex;
     }
@@ -71,10 +67,8 @@ void enqueue(int vertex)
 int dequeue()
 {
     int vertex;
-
     if (front == -1 || front > rear)
         return -1;
-
     vertex = queue[front];
     front++;
 
@@ -114,6 +108,7 @@ void BFS(int startIndex)
 
     enqueue(startIndex);
     visited[startIndex] = 1;
+
     while (front != -1 && front <= rear)
     {
         row = dequeue();
@@ -158,6 +153,7 @@ void createEdge()
         printf("Cannot connect a vertex to itself.\n");
         return;
     }
+
     temp = adjacency[firstIndex];
 
     while (temp != NULL)
@@ -189,110 +185,110 @@ void updateEdge()
     int firstIndex, oldIndex, newIndex;
     struct Node *temp, *prev, *newNode;
 
-    printf("Enter first vertex of existing edge (A-E): ");
+    printf("Enter first vertex of existing edge (A-E): ");     // Take the first vertex of the existing edge
     scanf(" %c", &firstVertex);
 
-    printf("Enter second vertex of existing edge (A-E): ");
+    printf("Enter second vertex of existing edge (A-E): ");    // Take the second vertex of the existing edge
     scanf(" %c", &oldVertex);
 
-    firstIndex = getVertexIndex(firstVertex);
-    oldIndex = getVertexIndex(oldVertex);
+    firstIndex = getVertexIndex(firstVertex);                  // Convert the first vertex into its index
+    oldIndex = getVertexIndex(oldVertex);                       // Convert the old vertex into its index
 
-    if (firstIndex == -1 || oldIndex == -1)
+    if (firstIndex == -1 || oldIndex == -1)                     // Check whether both vertices are valid
     {
         printf("Invalid vertex!\n");
         return;
     }
 
-    if (firstIndex == oldIndex)
+    if (firstIndex == oldIndex)                                 // Check whether both vertices are the same
     {
         printf("Existing edge not found.\n");
         return;
     }
 
-    temp = adjacency[firstIndex];   
+    temp = adjacency[firstIndex];                               // Point to the first node of the first vertex's list
 
-    while (temp != NULL && temp->vertex != oldIndex)
-        temp = temp->next;
+    while (temp != NULL && temp->vertex != oldIndex)            // Search for the old vertex in the linked list
+        temp = temp->next;                                      // Move to the next node
 
-    if (temp == NULL)
+    if (temp == NULL)                                           // Check whether the existing edge was found
     {
         printf("Existing edge not found.\n");
         return;
     }
 
-    printf("Enter new second vertex (A-E): ");
+    printf("Enter new second vertex (A-E): ");                  // Ask for the new vertex
     scanf(" %c", &newVertex);
 
-    newIndex = getVertexIndex(newVertex);
+    newIndex = getVertexIndex(newVertex);                       // Convert the new vertex into its index
 
-    if (newIndex == -1)
+    if (newIndex == -1)                                         // Check whether the new vertex is valid
     {
         printf("Invalid vertex!\n");
         return;
     }
 
-    if (firstIndex == newIndex)
+    if (firstIndex == newIndex)                                 // Prevent connecting a vertex to itself
     {
         printf("Cannot connect a vertex to itself.\n");
         return;
     }
 
-    temp = adjacency[firstIndex];
+    temp = adjacency[firstIndex];                               // Start from the beginning of the first vertex's list
 
-    while (temp != NULL)
+    while (temp != NULL)                                        // Traverse the linked list
     {
-        if (temp->vertex == newIndex)
+        if (temp->vertex == newIndex)                           // Check whether the new edge already exists
         {
             printf("The new edge already exists.\n");
             return;
         }
-        temp = temp->next;
+        temp = temp->next;                                      // Move to the next node
     }
 
-    prev = NULL;
-    temp = adjacency[firstIndex];
+    prev = NULL;                                                // No previous node at the beginning
+    temp = adjacency[firstIndex];                               // Start from the first vertex's linked list
 
-    while (temp->vertex != oldIndex)
+    while (temp->vertex != oldIndex)                            // Find the node containing the old vertex
     {
-        prev = temp;
-        temp = temp->next;
+        prev = temp;                                            // Store the current node as the previous node
+        temp = temp->next;                                      // Move to the next node
     }
 
-    if (prev == NULL)
-        adjacency[firstIndex] = temp->next;
+    if (prev == NULL)                                           // Check whether the node to remove is the first node
+        adjacency[firstIndex] = temp->next;                     // Update the starting pointer to the next node
     else
-        prev->next = temp->next;
+        prev->next = temp->next;                                // Make the previous node skip the node being removed
 
-    free(temp);
+    free(temp);                                                 // Release the memory of the removed node
 
-    prev = NULL;
-    temp = adjacency[oldIndex];
+    prev = NULL;                                                // Reset the previous pointer
+    temp = adjacency[oldIndex];                                 // Start from the old vertex's linked list
 
-    while (temp->vertex != firstIndex)
+    while (temp->vertex != firstIndex)                          // Find the first vertex in the old vertex's list
     {
-        prev = temp;
-        temp = temp->next;
+        prev = temp;                                            // Store the current node as the previous node
+        temp = temp->next;                                      // Move to the next node
     }
 
-    if (prev == NULL)
-        adjacency[oldIndex] = temp->next;
+    if (prev == NULL)                                           // Check whether the node to remove is the first node
+        adjacency[oldIndex] = temp->next;                       // Update the starting pointer to the next node
     else
-        prev->next = temp->next;
+        prev->next = temp->next;                                // Make the previous node skip the node being removed
 
-    free(temp);
+    free(temp);                                                 // Release the memory of the removed node
 
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = newIndex;
-    newNode->next = adjacency[firstIndex];
-    adjacency[firstIndex] = newNode;
+    newNode = malloc(sizeof(struct Node));                      // Allocate memory for the new node
+    newNode->vertex = newIndex;                                 // Store the new vertex's index
+    newNode->next = adjacency[firstIndex];                      // Connect the new node to the existing list
+    adjacency[firstIndex] = newNode;                            // Make the new node the first node in the list
 
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = firstIndex;
-    newNode->next = adjacency[newIndex];
-    adjacency[newIndex] = newNode;
+    newNode = malloc(sizeof(struct Node));                      // Allocate memory for the reverse connection
+    newNode->vertex = firstIndex;                               // Store the first vertex's index
+    newNode->next = adjacency[newIndex];                        // Connect the new node to the new vertex's list
+    adjacency[newIndex] = newNode;                              // Make the new node the first node in that list
 
-    printf("Edge updated successfully.\n");
+    printf("Edge updated successfully.\n");                     // Display the success message
 }
 
 void deleteEdge()
@@ -383,50 +379,33 @@ void displayVertices()
 int main()
 {
     char vertex;
-    int choice, startIndex, i;
+    int choice, startIndex, i, j;
     struct Node *newNode, *temp;
+
+    int edges[NO_OF_ELEMENTS][NO_OF_ELEMENTS] = {
+        {0, 1, 1, 0, 0},
+        {1, 0, 0, 1, 0},
+        {1, 0, 0, 1, 1},
+        {0, 1, 1, 0, 1},
+        {0, 0, 1, 1, 0}
+    };
 
     for (i = 0; i < NO_OF_ELEMENTS; i++)
         adjacency[i] = NULL;
 
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = 1;
-    newNode->next = malloc(sizeof(struct Node));
-    newNode->next->vertex = 2;
-    newNode->next->next = NULL;
-    adjacency[0] = newNode;
-
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = 0;
-    newNode->next = malloc(sizeof(struct Node));
-    newNode->next->vertex = 3;
-    newNode->next->next = NULL;
-    adjacency[1] = newNode;
-
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = 0;
-    newNode->next = malloc(sizeof(struct Node));
-    newNode->next->vertex = 3;
-    newNode->next->next = malloc(sizeof(struct Node));
-    newNode->next->next->vertex = 4;
-    newNode->next->next->next = NULL;
-    adjacency[2] = newNode;
-
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = 1;
-    newNode->next = malloc(sizeof(struct Node));
-    newNode->next->vertex = 2;
-    newNode->next->next = malloc(sizeof(struct Node));
-    newNode->next->next->vertex = 4;
-    newNode->next->next->next = NULL;
-    adjacency[3] = newNode;
-
-    newNode = malloc(sizeof(struct Node));
-    newNode->vertex = 2;
-    newNode->next = malloc(sizeof(struct Node));
-    newNode->next->vertex = 3;
-    newNode->next->next = NULL;
-    adjacency[4] = newNode;
+    for (i = 0; i < NO_OF_ELEMENTS; i++)
+    {
+        for (j = NO_OF_ELEMENTS - 1; j >= 0; j--)
+        {
+            if (edges[i][j] == 1)
+            {
+                newNode = malloc(sizeof(struct Node));
+                newNode->vertex = j;
+                newNode->next = adjacency[i];
+                adjacency[i] = newNode;
+            }
+        }
+    }
 
     while (1)
     {
