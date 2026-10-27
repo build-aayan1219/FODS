@@ -1,6 +1,7 @@
+
 #include <stdio.h>
 
-#define MAX_VERTICES 5
+#define MAX_VERTICES 100
 
 char vertex_name[MAX_VERTICES];
 int vertices_matrix[MAX_VERTICES][MAX_VERTICES];
@@ -69,9 +70,56 @@ char getName(int index)
     return vertex_name[index];
 }
 
+int hasLinks()
+{
+    int i, j;
+    for (i = 0; i < no_of_elements; i++)
+    {
+        for (j = 0; j < no_of_elements; j++)
+        {
+            if (vertices_matrix[i][j] == 1)
+                return 1;
+        }
+    }
+    return 0;
+}
+
+int isConnected()
+{
+    int i, current, next, tempTop = -1, count = 0;
+    int tempVisited[MAX_VERTICES] = {0};
+    int tempStack[MAX_VERTICES];
+
+    if (no_of_elements == 0)
+        return 0;
+
+    tempStack[++tempTop] = 0;
+    tempVisited[0] = 1;
+
+    while (tempTop != -1)
+    {
+        current = tempStack[tempTop--];
+        count++;
+
+        for (i = 0; i < no_of_elements; i++)
+        {
+            next = i;
+            if (vertices_matrix[current][next] == 1 && tempVisited[next] == 0)
+            {
+                tempVisited[next] = 1;
+                tempStack[++tempTop] = next;
+            }
+        }
+    }
+    if (count == no_of_elements)
+        return 1;
+
+    return 0;
+}
+
 void push(int vertex)
 {
-    if (top < no_of_elements - 1)
+    if (top < MAX_VERTICES - 1)
     {
         top++;
         stack[top] = vertex;
@@ -90,7 +138,7 @@ int pop()
 
 void enqueue(int vertex)
 {
-    if (rear < no_of_elements - 1)
+    if (rear < MAX_VERTICES - 1)
     {
         if (front == -1)
             front = 0;
@@ -109,16 +157,15 @@ int dequeue()
     return vertex;
 }
 
-void createGraph()
+int createGraph()
 {
-    int i, j, k, count, valid, attempts;
-    char vertex, connectedVertex;
-    int connectedIndex;
+    int i, j, count, valid, attempts, connectedIndex;
+    char vertex;
 
     valid = 0;
     for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
     {
-        printf("Enter total number of vertices (1-5): ");
+        printf("Enter total number of vertices (1-%d): ", MAX_VERTICES);
         if (readInteger(&no_of_elements) == 1 && no_of_elements >= 1 && no_of_elements <= MAX_VERTICES)
             valid = 1;
         else
@@ -127,9 +174,8 @@ void createGraph()
 
     if (valid == 0)
     {
-        printf("3 attempts completed. Graph not created.\n");
-        no_of_elements = 0;
-        return;
+        printf("3 attempts completed. Program ended.\n");
+        return 0;
     }
 
     for (i = 0; i < MAX_VERTICES; i++)
@@ -143,8 +189,8 @@ void createGraph()
         valid = 0;
         for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
         {
-            printf("Enter vertex %d (A-E): ", i + 1);
-            if (readVertex(&vertex) == 1 && vertex >= 'A' && vertex <= 'E')
+            printf("Enter vertex %d name: ", i + 1);
+            if (readVertex(&vertex) == 1)
             {
                 valid = 1;
                 for (j = 0; j < i; j++)
@@ -152,18 +198,20 @@ void createGraph()
                     if (vertex_name[j] == vertex)
                         valid = 0;
                 }
+                if (valid == 1)
+                    vertex_name[i] = vertex;
             }
+
             if (valid == 0)
                 printf("Invalid or duplicate vertex! Attempt %d of 3\n", attempts);
         }
 
         if (valid == 0)
         {
-            printf("3 attempts completed. Graph not created.\n");
+            printf("3 attempts completed. Program ended.\n");
             no_of_elements = 0;
-            return;
+            return 0;
         }
-        vertex_name[i] = vertex;
     }
 
     for (i = 0; i < no_of_elements; i++)
@@ -171,23 +219,18 @@ void createGraph()
         valid = 0;
         for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
         {
-            printf("How many links of %c? ", vertex_name[i]);
+            printf("How many links does %c have? ", vertex_name[i]);
             if (readInteger(&count) == 1 && count >= 0 && count < no_of_elements)
                 valid = 1;
             else
-                printf("Invalid input! Attempt %d of 3\n", attempts);
+                printf("Invalid link count! Attempt %d of 3\n", attempts);
         }
 
         if (valid == 0)
         {
-            printf("3 attempts completed. Graph not created.\n");
+            printf("3 attempts completed. Program ended.\n");
             no_of_elements = 0;
-            for (j = 0; j < MAX_VERTICES; j++)
-            {
-                for (k = 0; k < MAX_VERTICES; k++)
-                    vertices_matrix[j][k] = 0;
-            }
-            return;
+            return 0;
         }
 
         for (j = 0; j < count; j++)
@@ -195,41 +238,44 @@ void createGraph()
             valid = 0;
             for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
             {
-                printf("Enter connected vertex %d of %c: ", j + 1, vertex_name[i]);
-                if (readVertex(&connectedVertex) == 1)
+                printf("Enter connected vertex for %c: ", vertex_name[i]);
+                if (readVertex(&vertex) == 1)
                 {
-                    connectedIndex = getVertexIndex(connectedVertex);
-                    if (connectedIndex != -1 && connectedIndex != i && vertices_matrix[i][connectedIndex] == 0)
+                    connectedIndex = getVertexIndex(vertex);
+                    if (connectedIndex != -1 && connectedIndex != i)
                         valid = 1;
                 }
+
                 if (valid == 0)
-                    printf("Invalid vertex, duplicate link or self-connection! Attempt %d of 3\n", attempts);
+                    printf("Invalid vertex or self-connection! Attempt %d of 3\n", attempts);
             }
 
             if (valid == 0)
+                printf("3 attempts completed. Link input skipped.\n");
+            else if (vertices_matrix[i][connectedIndex] == 1)
+                printf("Edge already exists.\n");
+            else
             {
-                printf("3 attempts completed. Graph not created.\n");
-                no_of_elements = 0;
-                for (k = 0; k < MAX_VERTICES; k++)
-                {
-                    for (int l = 0; l < MAX_VERTICES; l++)
-                        vertices_matrix[k][l] = 0;
-                }
-                return;
+                vertices_matrix[i][connectedIndex] = 1;
+                vertices_matrix[connectedIndex][i] = 1;
             }
-
-            vertices_matrix[i][connectedIndex] = 1;
-            vertices_matrix[connectedIndex][i] = 1;
         }
     }
+
     printf("Graph created successfully.\n");
+    if (!hasLinks())
+        printf("There is no graph as there are no links.\n");
+
+    return 1;
 }
 
 void DFS(int startIndex)
 {
     int row, column;
+
     push(startIndex);
     visited[startIndex] = 1;
+
     while (top != -1)
     {
         row = pop();
@@ -248,8 +294,10 @@ void DFS(int startIndex)
 void BFS(int startIndex)
 {
     int row, column;
+
     enqueue(startIndex);
     visited[startIndex] = 1;
+
     while (front != -1 && front <= rear)
     {
         row = dequeue();
@@ -268,12 +316,18 @@ void BFS(int startIndex)
 void createEdge()
 {
     char firstVertex, secondVertex;
-    int firstIndex, secondIndex, valid, attempts;
+    int firstIndex, secondIndex, valid, attempts, count, i;
+
+    if (no_of_elements < 2)
+    {
+        printf("At least two vertices are required to create an edge.\n");
+        return;
+    }
 
     valid = 0;
     for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
     {
-        printf("Enter first vertex: ");
+        printf("Enter starting vertex: ");
         if (readVertex(&firstVertex) == 1)
         {
             firstIndex = getVertexIndex(firstVertex);
@@ -283,41 +337,57 @@ void createEdge()
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
-        printf("3 attempts completed. Graph not created.\n");
+        printf("3 attempts completed. Create edge cancelled.\n");
         return;
     }
 
     valid = 0;
     for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
     {
-        printf("Enter second vertex: ");
-        if (readVertex(&secondVertex) == 1)
-        {
-            secondIndex = getVertexIndex(secondVertex);
-            if (secondIndex != -1)
-                valid = 1;
-        }
-        if (valid == 0)
-            printf("Invalid vertex! Attempt %d of 3\n", attempts);
+        printf("How many edges do you want to create from %c? ", firstVertex);
+        if (readInteger(&count) == 1 && count >= 0 && count < no_of_elements)
+            valid = 1;
+        else
+            printf("Invalid edge count! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
-        printf("3 attempts completed. Graph not created.\n");
+        printf("3 attempts completed. Create edge cancelled.\n");
         return;
     }
 
-    if (firstIndex == secondIndex)
-        printf("Cannot connect a vertex to itself.\n");
-    else if (vertices_matrix[firstIndex][secondIndex] == 1)
-        printf("Edge already exists.\n");
-    else
+    for (i = 0; i < count; i++)
     {
-        vertices_matrix[firstIndex][secondIndex] = 1;
-        vertices_matrix[secondIndex][firstIndex] = 1;
-        printf("Edge created successfully.\n");
+        valid = 0;
+        for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
+        {
+            printf("Enter connected vertex %d for %c: ", i + 1, firstVertex);
+            if (readVertex(&secondVertex) == 1)
+            {
+                secondIndex = getVertexIndex(secondVertex);
+                if (secondIndex != -1 && secondIndex != firstIndex && vertices_matrix[firstIndex][secondIndex] == 0)
+                    valid = 1;
+            }
+            if (valid == 0)
+                printf("Invalid vertex, self-connection, or edge already exists! Attempt %d of 3\n", attempts);
+        }
+
+        if (valid == 1)
+        {
+            vertices_matrix[firstIndex][secondIndex] = 1;
+            vertices_matrix[secondIndex][firstIndex] = 1;
+            printf("Edge %c-%c created successfully.\n", firstVertex, secondVertex);
+        }
+        else
+            printf("3 attempts completed. This edge was skipped.\n");
     }
+
+    if (count == 0)
+        printf("No edges were created.\n");
 }
 
 void updateEdge()
@@ -335,9 +405,11 @@ void updateEdge()
             if (firstIndex != -1)
                 valid = 1;
         }
+
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
         printf("3 attempts completed. Update cancelled.\n");
@@ -354,9 +426,11 @@ void updateEdge()
             if (oldIndex != -1)
                 valid = 1;
         }
+
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
         printf("3 attempts completed. Update cancelled.\n");
@@ -379,9 +453,11 @@ void updateEdge()
             if (newIndex != -1)
                 valid = 1;
         }
+
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
         printf("3 attempts completed. Update cancelled.\n");
@@ -417,9 +493,11 @@ void deleteEdge()
             if (firstIndex != -1)
                 valid = 1;
         }
+
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
         printf("3 attempts completed. Delete cancelled.\n");
@@ -436,9 +514,11 @@ void deleteEdge()
             if (secondIndex != -1)
                 valid = 1;
         }
+
         if (valid == 0)
             printf("Invalid vertex! Attempt %d of 3\n", attempts);
     }
+
     if (valid == 0)
     {
         printf("3 attempts completed. Delete cancelled.\n");
@@ -454,15 +534,173 @@ void deleteEdge()
         vertices_matrix[firstIndex][secondIndex] = 0;
         vertices_matrix[secondIndex][firstIndex] = 0;
         printf("Edge deleted successfully.\n");
+        if (!hasLinks())
+            printf("There is no graph as there are no links.\n");
     }
+}
+
+void addVertex()
+{
+    char vertex;
+    int valid, attempts, i;
+
+    if (no_of_elements >= MAX_VERTICES)
+    {
+        printf("Maximum vertex limit reached.\n");
+        return;
+    }
+
+    valid = 0;
+    for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
+    {
+        printf("Enter new vertex name: ");
+        if (readVertex(&vertex) == 1 && getVertexIndex(vertex) == -1)
+            valid = 1;
+        else
+            printf("Invalid or duplicate vertex! Attempt %d of 3\n", attempts);
+    }
+
+    if (valid == 0)
+    {
+        printf("3 attempts completed. Add vertex cancelled.\n");
+        return;
+    }
+
+    vertex_name[no_of_elements] = vertex;
+    for (i = 0; i <= no_of_elements; i++)
+    {
+        vertices_matrix[no_of_elements][i] = 0;
+        vertices_matrix[i][no_of_elements] = 0;
+    }
+
+    no_of_elements++;
+    printf("Vertex added successfully.\n");
+}
+
+void updateVertex()
+{
+    char oldVertex, newVertex;
+    int oldIndex, valid, attempts;
+
+    valid = 0;
+    for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
+    {
+        printf("Enter existing vertex name: ");
+        if (readVertex(&oldVertex) == 1)
+        {
+            oldIndex = getVertexIndex(oldVertex);
+            if (oldIndex != -1)
+                valid = 1;
+        }
+
+        if (valid == 0)
+            printf("Invalid vertex! Attempt %d of 3\n", attempts);
+    }
+
+    if (valid == 0)
+    {
+        printf("3 attempts completed. Update vertex cancelled.\n");
+        return;
+    }
+
+    valid = 0;
+    for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
+    {
+        printf("Enter new vertex name: ");
+        if (readVertex(&newVertex) == 1 && (getVertexIndex(newVertex) == -1 || newVertex == oldVertex))
+            valid = 1;
+        else
+            printf("Invalid or duplicate vertex! Attempt %d of 3\n", attempts);
+    }
+
+    if (valid == 0)
+    {
+        printf("3 attempts completed. Update vertex cancelled.\n");
+        return;
+    }
+
+    vertex_name[oldIndex] = newVertex;
+    printf("Vertex updated successfully.\n");
+}
+
+void deleteVertex()
+{
+    char vertex;
+    int index, valid, attempts, i, j, sourceRow, sourceColumn;
+    int temp[MAX_VERTICES][MAX_VERTICES];
+
+    if (no_of_elements == 0)
+    {
+        printf("There are no vertices to delete.\n");
+        return;
+    }
+
+    valid = 0;
+    for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
+    {
+        printf("Enter vertex to delete: ");
+        if (readVertex(&vertex) == 1)
+        {
+            index = getVertexIndex(vertex);
+            if (index != -1)
+                valid = 1;
+        }
+
+        if (valid == 0)
+            printf("Invalid vertex! Attempt %d of 3\n", attempts);
+    }
+
+    if (valid == 0)
+    {
+        printf("3 attempts completed. Delete vertex cancelled.\n");
+        return;
+    }
+
+    for (i = 0; i < no_of_elements - 1; i++)
+    {
+        sourceRow = i;
+        if (sourceRow >= index)
+            sourceRow++;
+
+        for (j = 0; j < no_of_elements - 1; j++)
+        {
+            sourceColumn = j;
+            if (sourceColumn >= index)
+                sourceColumn++;
+
+            temp[i][j] = vertices_matrix[sourceRow][sourceColumn];
+        }
+    }
+
+    for (i = index; i < no_of_elements - 1; i++)
+        vertex_name[i] = vertex_name[i + 1];
+
+    no_of_elements--;
+
+    for (i = 0; i < no_of_elements; i++)
+    {
+        for (j = 0; j < no_of_elements; j++)
+            vertices_matrix[i][j] = temp[i][j];
+    }
+
+    for (i = 0; i < MAX_VERTICES; i++)
+    {
+        vertices_matrix[no_of_elements][i] = 0;
+        vertices_matrix[i][no_of_elements] = 0;
+    }
+
+    printf("Vertex deleted successfully.\n");
+    if (!hasLinks())
+        printf("There is no graph as there are no links.\n");
 }
 
 void displayMatrix()
 {
     int i, j;
-    if (no_of_elements == 0)
+
+    if (!hasLinks())
     {
-        printf("No graph available.\n");
+        printf("There is no graph as there are no links.\n");
         return;
     }
 
@@ -483,9 +721,10 @@ void displayMatrix()
 void displayVertices()
 {
     int i;
+
     if (no_of_elements == 0)
     {
-        printf("No graph available.\n");
+        printf("There are no vertices.\n");
         return;
     }
 
@@ -500,8 +739,7 @@ int main()
     char vertex;
     int startIndex, choice, i, attempts, valid, exitProgram;
 
-    createGraph();
-    if (no_of_elements == 0)
+    if (createGraph() == 0)
         return 0;
 
     exitProgram = 0;
@@ -512,15 +750,18 @@ int main()
         printf("3. Create Edge\n");
         printf("4. Update Edge\n");
         printf("5. Delete Edge\n");
-        printf("6. Display Vertices\n");
-        printf("7. Display Adjacency Matrix\n");
-        printf("8. Exit\n");
+        printf("6. Add Vertex\n");
+        printf("7. Update Vertex\n");
+        printf("8. Delete Vertex\n");
+        printf("9. Display Vertices\n");
+        printf("10. Display Adjacency Matrix\n");
+        printf("11. Exit\n");
 
         valid = 0;
         for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
         {
             printf("Enter your choice: ");
-            if (readInteger(&choice) == 1 && choice >= 1 && choice <= 8)
+            if (readInteger(&choice) == 1 && choice >= 1 && choice <= 11)
                 valid = 1;
             else
                 printf("Invalid input! Attempt %d of 3\n", attempts);
@@ -533,42 +774,53 @@ int main()
         }
         else if (choice == 1 || choice == 2)
         {
-            valid = 0;
-            for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
-            {
-                printf("Enter starting vertex: ");
-                if (readVertex(&vertex) == 1)
-                {
-                    startIndex = getVertexIndex(vertex);
-                    if (startIndex != -1)
-                        valid = 1;
-                }
-                if (valid == 0)
-                    printf("Invalid vertex! Attempt %d of 3\n", attempts);
-            }
-
-            if (valid == 0)
-                printf("3 attempts completed. Traversal cancelled.\n");
+            if (!hasLinks())
+                printf("There is no graph as there are no links.\n");
+            else if (!isConnected())
+                printf("All vertices are not connected. Connect them.\n");
+            else if (no_of_elements == 0)
+                printf("There are no vertices.\n");
             else
             {
-                for (i = 0; i < no_of_elements; i++)
-                    visited[i] = 0;
-
-                top = -1;
-                front = -1;
-                rear = -1;
-
-                if (choice == 1)
+                valid = 0;
+                for (attempts = 1; attempts <= 3 && valid == 0; attempts++)
                 {
-                    printf("DFS Traversal: ");
-                    DFS(startIndex);
+                    printf("Enter starting vertex: ");
+                    if (readVertex(&vertex) == 1)
+                    {
+                        startIndex = getVertexIndex(vertex);
+                        if (startIndex != -1)
+                            valid = 1;
+                    }
+
+                    if (valid == 0)
+                        printf("Invalid vertex! Attempt %d of 3\n", attempts);
                 }
+
+                if (valid == 0)
+                    printf("3 attempts completed. Traversal cancelled.\n");
                 else
                 {
-                    printf("BFS Traversal: ");
-                    BFS(startIndex);
+                    for (i = 0; i < no_of_elements; i++)
+                        visited[i] = 0;
+
+                    top = -1;
+                    front = -1;
+                    rear = -1;
+
+                    if (choice == 1)
+                    {
+                        printf("DFS Traversal: ");
+                        DFS(startIndex);
+                    }
+                    else
+                    {
+                        printf("BFS Traversal: ");
+                        BFS(startIndex);
+                    }
+
+                    printf("\n");
                 }
-                printf("\n");
             }
         }
         else if (choice == 3)
@@ -578,14 +830,21 @@ int main()
         else if (choice == 5)
             deleteEdge();
         else if (choice == 6)
-            displayVertices();
+            addVertex();
         else if (choice == 7)
-            displayMatrix();
+            updateVertex();
         else if (choice == 8)
+            deleteVertex();
+        else if (choice == 9)
+            displayVertices();
+        else if (choice == 10)
+            displayMatrix();
+        else if (choice == 11)
         {
             printf("Program ended.\n");
             exitProgram = 1;
         }
     }
+
     return 0;
 }
