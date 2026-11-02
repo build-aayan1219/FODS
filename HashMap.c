@@ -35,10 +35,10 @@ int readInteger(int *value) {
     return 0;
 }
 
-int inputInteger(char *prompt, int *value) {
+int inputInteger(char *message, int *value) {
     int attempts, valid = 0;
     for (attempts = 1; attempts <= 3 && valid == 0; attempts++) {
-        printf("%s", prompt);
+        printf("%s", message);
         if (readInteger(value) == 1)
             valid = 1;
         else
@@ -50,6 +50,9 @@ int inputInteger(char *prompt, int *value) {
 }
 
 int hashFunction(int key) {
+    if(key % 5 == 0) {
+        return 9;
+    }
     return ((key % SIZE) + SIZE) % SIZE;
 }
 

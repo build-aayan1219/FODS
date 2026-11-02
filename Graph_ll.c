@@ -232,7 +232,6 @@ int isConnected()
             temp = temp->next;
         }
     }
-
     return count == no_of_elements;
 }
 
@@ -619,23 +618,23 @@ void deleteVertex()
     index = getVertexIndex(vertex);
 
     temp = adjacency[index];
-    while (temp != NULL)
+    while (temp != NULL)                                            //delete b from every adjacency list and free memory
     {
         nextNode = temp->next;
         removeEdge(index, temp->vertex);
         temp = nextNode;
     }
 
-    for (i = 0; i < no_of_elements; i++)
-    {
-        temp = adjacency[i];
-        while (temp != NULL)
-        {
-            if (temp->vertex > index)
-                temp->vertex--;
-            temp = temp->next;
-        }
-    }
+    // for (i = 0; i < no_of_elements; i++)                 //update vertex indices in adjacency lists, decrease each index greater than b to b-1.
+    // {
+    //     temp = adjacency[i];
+    //     while (temp != NULL)
+    //     {
+    //         if (temp->vertex > index)
+    //             temp->vertex--;
+    //         temp = temp->next;
+    //     }
+    // }
 
     for (i = index; i < no_of_elements - 1; i++)
     {
